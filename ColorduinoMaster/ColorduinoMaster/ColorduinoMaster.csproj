@@ -40,6 +40,9 @@
     <Compile Include="Weather.cs" />
     <Compile Include="Master.cs" />
     <Compile Include="StreamEscaper.cs" />
+    <Compile Include="Frame.cs" />
+    <Compile Include="BarGraph.cs" />
+    <Compile Include="FileAnimation.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

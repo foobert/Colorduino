@@ -6,8 +6,6 @@ using System.Threading;
 using System.Text;
 using System.Linq;
 
-// 5739e39925170135130501
-
 namespace ColorduinoMaster
 {
     class MainClass
@@ -25,11 +23,13 @@ namespace ColorduinoMaster
                     if (input.StartsWith("bars "))
                     {
                         var floats = input.Split(' ').Skip(1).Select(s => float.Parse(s, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
-                        master.ShowBars(floats[0], floats[1], floats[2]);
+						var frames = new BarGraph().Render(floats[0], floats[1], floats[2]);
+						master.Animate(frames);
                     }
                     else if (input == "test")
                     {
-                        master.Animate("frame-a", "frame-b", "frame-c", "frame-e");
+						var frames = new FileAnimation().Render("frame-a", "frame-b", "frame-c", "frame-e");
+                        master.Animate(frames);
                     }
                     else if (input == "exit")
                     {

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Text;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ColorduinoMaster
 {
@@ -88,82 +89,16 @@ namespace ColorduinoMaster
             _serial.Write(escaped, 0, escaped.Length);
         }
 
-        public void Animate(params string[] files)
-        {
-            WriteNewAnimation();
-            foreach (var file in files)
-            {
-                WriteNewFrame();
-                byte[] frame = File.ReadAllBytes(file + ".bin");
-                WriteFrameData(frame);
-            }
-            WriteStartAnimation();
-        }
-
-        public void ShowBars(float la, float lb, float lc)
-        {
-            WriteNewAnimation();
-            WriteNewFrame();
-
-            byte[] buffer = new byte[64 * 3];
-
-            byte r, g, b;
-
-            r = (byte)(0xFF * la);
-            g = (byte)(0xFF - r);
-            b = 0x00;
-
-            for (int i = 0; i < 8 * la; i++)
-            {
-                SetPixel (buffer, 0, i, r, g, b);
-                SetPixel (buffer, 1, i, r, g, b);
-            }
-
-            r = (byte)(0xFF * lb);
-            g = (byte)(0xFF - r);
-            b = 0x00;
-
-            for (int i = 0; i < 8 * lb; i++)
-            {
-                SetPixel (buffer, 3, i, r, g, b);
-                SetPixel (buffer, 4, i, r, g, b);
-            }
-
-            r = (byte)(0xFF * lc);
-            g = (byte)(0xFF - r);
-            b = 0x00;
-
-            for (int i = 0; i < 8 * lc; i++)
-            {
-                SetPixel (buffer, 6, i, r, g, b);
-                SetPixel (buffer, 7, i, r, g, b);
-            }
-
-            WriteFrameData(buffer);
-
-            WriteStartAnimation();
-        }
-
-        private int PosToIndex(int x, int y)
-        {
-            return (x * 8 + y) * 3;
-        }
-
-        private void SetPixel(byte[] buffer, int x, int y, int c)
-        {
-            SetPixel(buffer, x, y,
-                    (byte)((c >> 16) & 0xFF),
-                    (byte)((c >> 8) & 0xFF),
-                    (byte)(c & 0xFF));
-        }
-
-        private void SetPixel(byte[] buffer, int x, int y, byte r, byte g, byte b)
-        {
-            int index = PosToIndex(x, y);
-            buffer[index++] = r;
-            buffer[index++] = g;
-            buffer[index] = b;
-        }
+		public void Animate(IEnumerable<Frame> frames)
+		{
+			WriteNewAnimation ();
+			foreach (var frame in frames)
+			{
+				WriteNewFrame(frame.Duration);
+				WriteFrameData(frame.Data);
+			}
+			WriteStartAnimation();
+		}
 
         private void WriteNewAnimation()
         {
@@ -179,16 +114,17 @@ namespace ColorduinoMaster
             Write(buffer);
         }
 
-        private void WriteNewFrame()
+        private void WriteNewFrame(int duration)
         {
             byte[] buffer = new byte[3];
             buffer [0] = CMD_NEW_FRAME;
+			// todo interpret duration
             buffer [1] = (byte)0x00;
             buffer [2] = (byte)0xFF;
             Write(buffer);
         }
 
-        void WriteFrameData(byte[] frame)
+        private void WriteFrameData(byte[] frame)
         {
             int offset = 0;
             if (frame.Length != 64 * 3)
