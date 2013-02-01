@@ -26,6 +26,15 @@ namespace ColorduinoMaster
 						var frames = new BarGraph().Render(floats[0], floats[1], floats[2]);
 						master.Animate(frames);
                     }
+					else if (input.StartsWith("file "))
+					{
+						var filenames = input.Split(' ').Skip(1).Select(f => {
+							var frame = new Frame() { Duration = 1000 };
+							Console.WriteLine("Loading {0}", f);
+							frame.LoadPng(f);
+							return frame;});
+						master.Animate(filenames);
+					}
                     else if (input == "test")
                     {
 						var frames = new FileAnimation().Render("frame-a", "frame-b", "frame-c", "frame-e");

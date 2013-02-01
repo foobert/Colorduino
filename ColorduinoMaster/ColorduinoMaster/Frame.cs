@@ -1,12 +1,19 @@
 using System;
+using System.Drawing;
 
 namespace ColorduinoMaster
 {
-	public struct Frame
+	public class Frame
 	{
 		public int Duration { get; set; }
 
 		public byte[] Data { get; set; }
+
+		public Frame()
+		{
+			Duration = 0;
+			Data = new byte[64 * 3];
+		}
 
 		public void SetPixel(int x, int y, int c)
 		{
@@ -29,6 +36,19 @@ namespace ColorduinoMaster
 			return (x * 8 + y) * 3;
 		}
 
+		public void LoadPng(string filename)
+		{
+			using (Bitmap bitmap = new Bitmap(filename)) {
+				int width = Math.Min (bitmap.Width, 8);
+				int height = Math.Min (bitmap.Height, 8);
+				for (int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						var c = bitmap.GetPixel (x, y);
+						SetPixel (x, y, c.R, c.G, c.B);
+					}
+				}
+			}
+		}
 	}
 }
 

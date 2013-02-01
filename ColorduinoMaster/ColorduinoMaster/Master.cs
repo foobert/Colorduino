@@ -4,7 +4,6 @@ using System.IO.Ports;
 using System.Diagnostics;
 using System.Threading;
 using System.Text;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace ColorduinoMaster
@@ -18,13 +17,17 @@ namespace ColorduinoMaster
 		private const byte CMD_FILL = 0x05;
 		private const byte CMD_PLASMA = 0x06;
 
-        private SerialPort _serial;
-        private int _msgId;
-        private Thread _readThread;
-        private bool _running;
+		private bool _running;
+
+		private SerialPort _serial;
+		private StreamEscaper _escaper;
+
+		private int _nextMessageId;
+        
+		private Thread _readThread;
         private AutoResetEvent _readEvent;
         private volatile int _lastAck;
-		private StreamEscaper _escaper;
+
 
         public Master(string port)
         {
@@ -39,25 +42,6 @@ namespace ColorduinoMaster
             _readThread.Start();
         }
 
-        private void ReadLoop()
-        {
-            while (_running)
-            {
-                try
-                {
-                    byte ack = (byte)_serial.ReadByte();
-//                    Console.WriteLine("Received ack for msg " + ack);
-                    _lastAck = ack;
-                    _readEvent.Set();
-                }
-                catch (Exception)
-                {
-                    if (!_running)
-                        break;
-                }
-            }
-        }
-
         public void Dispose()
         {
             _running = false;
@@ -67,16 +51,34 @@ namespace ColorduinoMaster
                 _readThread.Join();
         }
 
-        private void Write(byte[] buffer)
+		private void ReadLoop()
+		{
+			while (_running)
+			{
+				try
+				{
+					byte ack = (byte)_serial.ReadByte();
+					_lastAck = ack;
+					_readEvent.Set();
+				}
+				catch (Exception)
+				{
+					if (!_running)
+						break;
+				}
+			}
+		}
+		
+		private void Write(byte[] buffer)
         {
 			bool sent = false;
             while (!sent)
             {
                 WriteEscaped(buffer);
-				sent = _readEvent.WaitOne(1000) && (_lastAck == _msgId);
+				sent = _readEvent.WaitOne(1000) && (_lastAck == _nextMessageId);
 				if (!sent)
                 {
-                    Console.WriteLine("Failed to send {0}", _msgId);
+                    Console.WriteLine("Failed to send {0}", _nextMessageId);
                     Thread.Sleep(100);
 				}
             }
@@ -84,7 +86,7 @@ namespace ColorduinoMaster
 
         private void WriteEscaped(byte[] buffer)
         {
-			byte msgId = (byte)(++_msgId % 0xFF);
+			byte msgId = (byte)(++_nextMessageId % 0xFF);
 			byte[] escaped = _escaper.Escape(msgId, buffer);
             _serial.Write(escaped, 0, escaped.Length);
         }
