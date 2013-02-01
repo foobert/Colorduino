@@ -1,0 +1,6 @@
+[submodule "ArduinoLibraries/SerialBuffer"]
+	path = ArduinoLibraries/SerialBuffer
+	url = git://github.com/jaz303/SerialBuffer.git
+[submodule "ArduinoLibraries/Colorduino"]
+	path = ArduinoLibraries/Colorduino
+	url = git://github.com/lincomatic/Colorduino.git
