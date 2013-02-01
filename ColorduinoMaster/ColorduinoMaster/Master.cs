@@ -10,6 +10,13 @@ namespace ColorduinoMaster
 {
     internal class Master : IDisposable
     {
+		private const byte CMD_NEW_ANIMATION = 0x01;
+		private const byte CMD_NEW_FRAME = 0x02;
+		private const byte CMD_APPEND_FRAME = 0x03;
+		private const byte CMD_START_ANIMATION = 0x04;
+		private const byte CMD_FILL = 0x05;
+		private const byte CMD_PLASMA = 0x06;
+
         private SerialPort _serial;
         private int _msgId;
         private Thread _readThread;
@@ -52,28 +59,23 @@ namespace ColorduinoMaster
         {
             _running = false;
             if (_serial != null)
-            {
                 _serial.Close();
-            }
-            if (_readThread != null)
+            if (_readThread != null && Thread.CurrentThread != _readThread && _readThread.IsAlive)
                 _readThread.Join();
         }
 
         private void Write(byte[] buffer)
         {
-            while (true)
+			bool sent = false;
+            while (!sent)
             {
                 WriteEscaped(buffer);
-                if (!_readEvent.WaitOne(1000) || _lastAck != _msgId)
+				sent = _readEvent.WaitOne(1000) && (_lastAck == _msgId);
+				if (!sent)
                 {
                     Console.WriteLine("Failed to send {0}", _msgId);
                     Thread.Sleep(100);
-                }
-                else
-                {
-//                    Console.WriteLine("Success!");
-                    break;
-                }
+				}
             }
         }
 
@@ -83,42 +85,47 @@ namespace ColorduinoMaster
             ushort sum2 = 0;
             
             MemoryStream mem = new MemoryStream();
+
+			// write start byte
             mem.WriteByte(0x7F);
-            byte b = (byte)(++_msgId % 0xFF);
-            if (b == 0x7D || b == 0x7E || b == 0x7F)
+
+			// first byte = incremented message id
+            byte msgId = (byte)(++_msgId % 0xFF);
+			AppendByte(mem, msgId, ref sum1, ref sum2);
+
+			for (int i = 0; i < buffer.Length; i++)
             {
-                mem.WriteByte(0x7D);
-                mem.WriteByte((byte)(b ^ 0x20));
+				AppendByte(mem, buffer[i], ref sum1, ref sum2);
             }
-            else
-            {
-                mem.WriteByte(b);
-            }
-            sum1 = (ushort)((sum1 + b) % 255);
-            sum2 = (ushort)((sum2 + sum1) % 255);
-            
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                b = buffer [i];
-                if (b == 0x7D || b == 0x7E || b == 0x7F)
-                {
-                    mem.WriteByte(0x7D);
-                    mem.WriteByte((byte)(b ^ 0x20));
-                }
-                else
-                {
-                    mem.WriteByte(b);
-                }
-                sum1 = (ushort)((sum1 + b) % 255);
-                sum2 = (ushort)((sum2 + sum1) % 255);
-            }
+
+			// write checksum bytes
             mem.WriteByte((byte)(sum2 & 0xFF));
             mem.WriteByte((byte)(sum1 & 0xFF));
-            mem.WriteByte(0x7E);
-            byte[] escaped = mem.ToArray();
 
+			// write end byte
+            mem.WriteByte(0x7E);
+
+            byte[] escaped = mem.ToArray();
             _serial.Write(escaped, 0, escaped.Length);
         }
+
+		private void AppendByte(MemoryStream stream, byte b, ref ushort sum1, ref ushort sum2)
+		{
+			// special bytes need escaping
+			if (b == 0x7D || b == 0x7E || b == 0x7F)
+			{
+				stream.WriteByte(0x7D); // escape byte
+				stream.WriteByte((byte)(b ^ 0x20)); // escape with static xor
+			}
+			else
+			{
+				stream.WriteByte(b);
+			}
+
+			// update checksum
+			sum1 = (ushort)((sum1 + b) % 0xFF);
+			sum2 = (ushort)((sum2 + sum1) % 0xFF);
+		}
 
         public void Animate(params string[] files)
         {
@@ -200,21 +207,21 @@ namespace ColorduinoMaster
         private void WriteNewAnimation()
         {
             byte[] buffer = new byte[1];
-            buffer [0] = (byte)0x01;
+            buffer [0] = CMD_NEW_ANIMATION;
             Write(buffer);
         }
 
         private void WriteStartAnimation()
         {
             byte[] buffer = new byte[1];
-            buffer [0] = (byte)0x04;
+            buffer [0] = CMD_START_ANIMATION;
             Write(buffer);
         }
 
         private void WriteNewFrame()
         {
             byte[] buffer = new byte[3];
-            buffer [0] = (byte)0x02;
+            buffer [0] = CMD_NEW_FRAME;
             buffer [1] = (byte)0x00;
             buffer [2] = (byte)0xFF;
             Write(buffer);
@@ -232,7 +239,7 @@ namespace ColorduinoMaster
                 if (todo % 3 != 0)
                     Console.WriteLine("invalid batch length");
                 byte[] buffer = new byte[todo + 1];
-                buffer[0] = (byte)0x03;
+                buffer[0] = CMD_APPEND_FRAME;
                 Array.Copy(frame, offset, buffer, 1, todo);
                 offset += todo;
                 Write (buffer);
