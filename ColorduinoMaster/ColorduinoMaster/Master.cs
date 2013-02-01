@@ -144,5 +144,12 @@ namespace ColorduinoMaster
                 Write (buffer);
             }
         }
+
+		public void WritePlasma()
+		{
+			byte[] buffer = new byte[1];
+			buffer[0] = CMD_PLASMA;
+			Write (buffer);
+		}
     }
 }

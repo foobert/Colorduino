@@ -40,6 +40,10 @@ namespace ColorduinoMaster
 						var frames = new FileAnimation().Render("frame-a", "frame-b", "frame-c", "frame-e");
                         master.Animate(frames);
                     }
+					else if (input == "plasma")
+					{
+						master.WritePlasma();
+					}
                     else if (input == "exit")
                     {
                         break;
