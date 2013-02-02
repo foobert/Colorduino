@@ -12,6 +12,7 @@ namespace ColorduinoMaster
     {
         public static void Main(string[] args)
         {
+
 			string dev = args[0];
 
             using (var master = new Master(dev))
@@ -34,6 +35,11 @@ namespace ColorduinoMaster
 							frame.LoadPng(f);
 							return frame;});
 						master.Animate(filenames);
+					}
+					else if (input.StartsWith("gif "))
+					{
+						var frames = Frame.LoadGif(input.Substring(4));
+						master.Animate(frames);
 					}
                     else if (input == "test")
                     {
