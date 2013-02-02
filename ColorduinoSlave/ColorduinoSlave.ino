@@ -261,7 +261,7 @@ void setup()
   // whiteBalVal[0]=red
   // whiteBalVal[1]=green
   // whiteBalVal[2]=blue
-  unsigned char whiteBalVal[3] = {36,63,63}; // for LEDSEE 6x6cm round matrix
+  unsigned char whiteBalVal[3] = {24,63,63}; // for LEDSEE 6x6cm round matrix
   Colorduino.SetWhiteBal(whiteBalVal);
 
   // plasma
