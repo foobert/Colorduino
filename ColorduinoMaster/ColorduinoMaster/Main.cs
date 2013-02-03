@@ -43,7 +43,12 @@ namespace ColorduinoMaster
 					}
 					else if (input.StartsWith("gif "))
 					{
-						var frames = Frame.LoadGif(input.Substring(4));
+						var font = new Font();
+						var frames = Frame.LoadGif(input.Substring(4)).ToArray();
+						foreach (var f in frames)
+						{
+							font.Render(f, "12", 0, 1, Color.Red);
+						}
 						master.Animate(frames);
 					}
                     else if (input == "weather")
@@ -63,9 +68,19 @@ namespace ColorduinoMaster
 						frame.SetPixel(0, 0, 255, 0, 0);
 						frame.SetPixel(0, 1, 0, 255, 0);
 						frame.SetPixel(0, 2, 0, 0, 255);
+						var font = new Font();
+						font.Render(frame, "12", 0, 0, Color.Red);
 //						frame.Pixels[0] = Color.Red;
 //						frame.Pixels[1] = Color.Green;
 //						frame.Pixels[2] = Color.Blue;
+						master.Animate(new Frame[] { frame });
+					}
+					else if (input.StartsWith("text "))
+					{
+						var text = input.Substring(5);
+						var frame = new Frame();
+						var font = new Font();
+						font.Render(frame, text, 0, 0, Color.Red);
 						master.Animate(new Frame[] { frame });
 					}
 					else if (input.StartsWith("fill "))

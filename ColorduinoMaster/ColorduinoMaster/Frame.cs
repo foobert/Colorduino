@@ -45,6 +45,12 @@ namespace ColorduinoMaster
 			Pixels[index] = c;
 		}
 
+		public void SetPixel(int x, int y, Color c)
+		{
+			int index = PosToIndex(x, y);
+			Pixels[index] = c;
+		}
+
 		private int PosToIndex(int x, int y)
 		{
 			// 7 5
@@ -73,10 +79,10 @@ namespace ColorduinoMaster
 		public static IEnumerable<Frame> LoadGif(string filename)
 		{
 			using (Bitmap bitmap = new Bitmap(filename)) {
-				foreach (var d in bitmap.FrameDimensionsList)
-				{
-					Console.WriteLine("Dim: {0}, Count: {1}", d.ToString(), bitmap.GetFrameCount(new FrameDimension(d)));
-				}
+//				foreach (var d in bitmap.FrameDimensionsList)
+//				{
+//					Console.WriteLine("Dim: {0}, Count: {1}", d.ToString(), bitmap.GetFrameCount(new FrameDimension(d)));
+//				}
 
 				FrameDimension dim = new FrameDimension(bitmap.FrameDimensionsList[0]);
 				for (int i = 0; i < bitmap.GetFrameCount(dim); i++)

@@ -20,6 +20,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <Externalconsole>True</Externalconsole>
+    <Commandlineparameters>/dev/tty.usbserial-A9EH9VNF 51.33 12.37 5739e39925170135130501</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>none</DebugType>
@@ -48,6 +49,7 @@
     <Compile Include="BarGraph.cs" />
     <Compile Include="FileAnimation.cs" />
     <Compile Include="Palette.cs" />
+    <Compile Include="Font.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
