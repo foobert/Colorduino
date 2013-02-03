@@ -22,6 +22,7 @@ namespace ColorduinoMaster
             {
 				var weather = new Weather(lat, lon, api);
 				var font = new Font("font.png");
+                var bars = new BarGraph();
 
                 while (true)
                 {
@@ -43,12 +44,12 @@ namespace ColorduinoMaster
 					{
 						var filename = input.Substring(4);
 						var frames = Frame.LoadGif(filename).ToArray();
-
+                        var frames2 = bars.Overlay(frames, 0.9f, 0.5f, 0.3f);
 //						foreach (var f in frames)
 //						{
 //							font.Render(f, "12", 0, 1, Color.Red);
 //						}
-						master.Animate(frames);
+						master.Animate(frames2);
 					}
                     else if (input == "weather")
                     {

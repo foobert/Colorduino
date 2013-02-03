@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ColorduinoMaster
 {
@@ -44,6 +45,11 @@ namespace ColorduinoMaster
 			}
 			return result;
 		}
+
+        public IEnumerable<Frame> Overlay(IEnumerable<Frame> frames, string text, int x, int y, Color color)
+        {
+            return frames.Select(f => Render(f, text, x, y, color));
+        }
 
 		public Frame Render(Frame frame, string text, int x, int y, Color color)
 		{
