@@ -37,7 +37,7 @@ namespace ColorduinoMaster
 
 		private int PosToIndex(int x, int y)
 		{
-			return (x * 8 + y) * 3;
+			return (x * 8 + 7 - y) * 3;
 		}
 
 		public void LoadPng(string filename)
