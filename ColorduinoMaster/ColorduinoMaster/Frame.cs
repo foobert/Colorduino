@@ -11,27 +11,23 @@ namespace ColorduinoMaster
 	{
 		public int Duration { get; set; }
 
-		public byte[] Data { get; set; }
+		public Color[] Pixels { get; set; }
 
 		public Frame()
 		{
 			Duration = 0;
-			Data = new byte[64 * 3];
+			Pixels = new Color[64];
 		}
 
 		public Color GetPixel(int x, int y)
 		{
 			int index = PosToIndex(x, y);
-			return Color.FromArgb(Data[index++], Data[index++], Data[index]);
+			return Pixels[index];
 		}
 
 		public IEnumerable<Color> AllPixels()
 		{
-			int index = 0;
-			while (index < Data.Length)
-			{
-				yield return Color.FromArgb(Data[index++], Data[index++], Data[index++]);
-			}
+			return Pixels;
 		}
 
 		public void SetPixel(int x, int y, int c)
@@ -45,14 +41,26 @@ namespace ColorduinoMaster
 		public void SetPixel(int x, int y, byte r, byte g, byte b)
 		{
 			int index = PosToIndex(x, y);
-			Data[index++] = r;
-			Data[index++] = g;
-			Data[index] = b;
+			Color c = Color.FromArgb(r, g, b);
+			Pixels[index] = c;
 		}
 
 		private int PosToIndex(int x, int y)
 		{
-			return (x * 8 + 7 - y) * 3;
+			// 7 5
+			// 6 4
+			// 5 3
+			// 4 2
+			// 3 1
+			// 2 0
+			// 1 9
+			// 0 8
+
+			// 0,0 =>  7 okay
+			// 0,7 =>  0 okay
+			// 1,0 => 15 okay
+			// 1,7 =>  8 okay
+			return x * 8 + y;
 		}
 
 		public void LoadPng(string filename)

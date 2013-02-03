@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Text;
 using System.Linq;
+using System.Drawing;
 
 namespace ColorduinoMaster
 {
@@ -56,6 +57,26 @@ namespace ColorduinoMaster
 						master.Animate(frames);
 						}
                     }
+					else if (input == "test")
+					{
+						var frame = new Frame();
+						frame.SetPixel(0, 0, 255, 0, 0);
+						frame.SetPixel(0, 1, 0, 255, 0);
+						frame.SetPixel(0, 2, 0, 0, 255);
+//						frame.Pixels[0] = Color.Red;
+//						frame.Pixels[1] = Color.Green;
+//						frame.Pixels[2] = Color.Blue;
+						master.Animate(new Frame[] { frame });
+					}
+					else if (input.StartsWith("fill "))
+					{
+						var colors = input.Split(' ').Skip(1).Select(i => int.Parse(i)).ToArray();
+						var color = Color.FromArgb(colors[0], colors[1], colors[2]);
+						var frame = new Frame();
+						for (int i = 0; i < 64; i++)
+							frame.Pixels[i] = color;
+						master.Animate(new Frame[] { frame });
+					}
 					else if (input == "plasma")
 					{
 						master.WritePlasma();
