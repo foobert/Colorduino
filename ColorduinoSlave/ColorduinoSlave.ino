@@ -35,7 +35,6 @@ typedef struct
   unsigned char b;
 } ColorRGB;
 
-//a color with 3 components: h, s and v
 typedef struct 
 {
   unsigned char h;
@@ -43,11 +42,16 @@ typedef struct
   unsigned char v;
 } ColorHSV;
 
+typedef struct
+{
+  byte length;  // number of pixels
+  byte color;   // index into palette
+} Pixel;
+
 typedef struct Frame {
   unsigned int duration;
   byte currentPixelIndex;
-  //ColorRGB* pixels;
-  byte* pixels;
+  Pixel* pixels;
   Frame* nextFrame;
 } Frame;
 
@@ -56,8 +60,7 @@ struct Frame* frame_new() {
   frame->duration = 0;
   frame->currentPixelIndex = 0;
   frame->nextFrame = 0;
-//  frame->pixels = (ColorRGB*)malloc(sizeof(ColorRGB) * 64);
-  frame->pixels = (byte*)malloc(sizeof(byte) * 64);
+  frame->pixels = NULL;
   return frame;
 }
 
@@ -66,7 +69,8 @@ void frame_delete(Frame* frame) {
     return;
   
   Frame* nextFrame = frame->nextFrame;
-  free(frame->pixels);
+  if (frame->pixels != NULL)
+    free(frame->pixels);
   free(frame);
   frame_delete(nextFrame);
 }
@@ -85,6 +89,9 @@ void cmd_new_animation(byte len, byte* buffer) {
   frameFirst = NULL;
   frameLast = NULL;
   frameDuration = 0;
+  
+  if (palette != NULL)
+    free(palette);
   palette = (ColorRGB*)malloc(sizeof(ColorRGB) * len / 3);
   for (int index = 0, i = 0; i < len; index++) {
     palette[index].r = buffer[i++];
@@ -123,19 +130,13 @@ void cmd_append_frame_data(byte len, byte* buffer) {
   //Serial.println(len, DEC);
   //Serial.print("old currentPixelIndex: ");
   //Serial.println(frame->currentPixelIndex, DEC);
+  byte newPixels = len / 2;
+  frame->pixels = (Pixel*)realloc(frame->pixels, sizeof(Pixel) * (frame->currentPixelIndex + newPixels));
   
-  for (byte i = 0; i < len && frame->currentPixelIndex < 64) {
-    /*
-    frame->pixels[frame->currentPixelIndex].r = buffer[i++];
-    frame->pixels[frame->currentPixelIndex].g = buffer[i++];
-    frame->pixels[frame->currentPixelIndex].b = buffer[i++];
-    */
-    frame->pixels[frame->currentPixelIndex] = buffer[i++];
-    frame->currentPixelIndex++;
+  for (byte i = 0; i < len; frame->currentPixelIndex++) {
+    frame->pixels[frame->currentPixelIndex].length = buffer[i++];
+    frame->pixels[frame->currentPixelIndex].color  = buffer[i++];
   }
-  //Serial.print("new currentPixelIndex: ");
-  //Serial.println(frame->currentPixelIndex, DEC);
-
 }
 
 void cmd_start_animation(byte len, byte* buffer) {
@@ -274,8 +275,6 @@ void setup()
   serialBuffer.reset();
   SERIAL_PORT.begin(BAUD_RATE);
   
-Serial.println(freeRam());
-  
   // compensate for relative intensity differences in R/G/B brightness
   // array of 6-bit base values for RGB (0~63)
   // whiteBalVal[0]=red
@@ -363,11 +362,14 @@ void loop()
         frameDuration = frameCurrent->duration;
       }
       
-      byte index = 0;
-      for (byte i = 0; i < 8; i++) {
-        for(byte j = 0; j < 8; j++) {
-          ColorRGB rgb = palette[frameCurrent->pixels[index++]];
-          Colorduino.SetPixel(i, j, rgb.r, rgb.g, rgb.b);
+      int index = 0;
+      for (int i = 0; i < frameCurrent->currentPixelIndex; i++) {
+        ColorRGB rgb = palette[frameCurrent->pixels[i].color];
+        for (int j = 0; j < frameCurrent->pixels[i].length; j++) {
+          byte x = index / 8;
+          byte y = 7 - index % 8;
+          Colorduino.SetPixel(x, y, rgb.r, rgb.g, rgb.b);
+          index++;
         }
       }
       Colorduino.FlipPage();

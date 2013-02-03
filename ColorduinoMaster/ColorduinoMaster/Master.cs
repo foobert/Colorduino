@@ -98,14 +98,43 @@ namespace ColorduinoMaster
 			foreach (var frame in frames)
 			{
 				WriteNewFrame(frame.Duration);
-				WriteFrameData(palette.EncodeFrame(frame));
+				WriteFrameData(RLE(palette.EncodeFrame(frame)));
 			}
 			WriteStartAnimation();
 		}
 
+		private byte[] RLE(byte[] data)
+		{
+			List<byte> mem = new List<byte>();
+			byte last = 255;
+			byte count = 0;
+			foreach (var b in data)
+			{
+				if (b != last)
+				{
+					if (count > 0)
+					{
+//						Console.WriteLine("RLE {0} pixels with value {1}", count, last);
+						mem.Add(count);
+						mem.Add(last);
+					}
+					count = 0;
+				}
+				last = b;
+				count++;
+			}
+			if (count > 0)
+			{
+//				Console.WriteLine("RLE {0} pixels with value {1}", count, last);
+				mem.Add(count);
+				mem.Add(last);
+			}
+			return mem.ToArray();
+		}
+
         private void WriteNewAnimation(byte[] palette)
         {
-			Console.WriteLine("Writing new animation, {0} bytes palette", palette.Length);
+//			Console.WriteLine("Writing new animation, {0} bytes palette", palette.Length);
             byte[] buffer = new byte[1 + palette.Length];
             buffer [0] = CMD_NEW_ANIMATION;
 			Array.Copy(palette, 0, buffer, 1, palette.Length);
@@ -131,21 +160,15 @@ namespace ColorduinoMaster
 
         private void WriteFrameData(byte[] frame)
         {
-			Console.WriteLine("Writing frame data {0} bytes", frame.Length);
+//			Console.WriteLine("Writing frame data {0} bytes", frame.Length);
             int offset = 0;
-            if (frame.Length != 64)
-                throw new ArgumentOutOfRangeException("invalid frame length " + frame.Length);
-
             while (offset < frame.Length)
             {
                 byte todo = (byte)Math.Min(30, frame.Length - offset);
-//                if (todo % 3 != 0)
-//                    Console.WriteLine("invalid batch length");
                 byte[] buffer = new byte[todo + 1];
                 buffer[0] = CMD_APPEND_FRAME;
                 Array.Copy(frame, offset, buffer, 1, todo);
                 offset += todo;
-				Console.WriteLine("Sending chunk of {0} bytes", todo);
 				Write (buffer);
             }
         }
