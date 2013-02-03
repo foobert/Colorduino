@@ -11,7 +11,7 @@ namespace ColorduinoMaster
 
 		public IEnumerable<Frame> Render(float la, float lb, float lc)
 		{
-			Frame frame = new Frame();
+			var frame = new MutableFrame();
 
 			byte r, g, b;
 			

@@ -47,9 +47,9 @@
     <Compile Include="StreamEscaper.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="BarGraph.cs" />
-    <Compile Include="FileAnimation.cs" />
     <Compile Include="Palette.cs" />
     <Compile Include="Font.cs" />
+    <Compile Include="MutableFrame.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

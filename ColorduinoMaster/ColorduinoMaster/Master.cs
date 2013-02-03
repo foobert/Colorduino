@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ColorduinoMaster
 {
@@ -16,6 +17,7 @@ namespace ColorduinoMaster
 		private const byte CMD_START_ANIMATION = 0x04;
 		private const byte CMD_FILL = 0x05;
 		private const byte CMD_PLASMA = 0x06;
+        private const byte CMD_APPEND_PALETTE = 0x07;
 
 		private bool _running;
 
@@ -72,7 +74,7 @@ namespace ColorduinoMaster
 		private void Write(byte[] buffer)
         {
 			bool sent = false;
-            while (!sent)
+            while (_running && !sent)
             {
                 WriteEscaped(buffer);
 				sent = _readEvent.WaitOne(1000) && (_lastAck == _nextMessageId);
@@ -94,50 +96,48 @@ namespace ColorduinoMaster
 		public void Animate(IEnumerable<Frame> frames)
 		{
 			var palette = new Palette(frames);
-			WriteNewAnimation(palette.Data);
-			foreach (var frame in frames)
+            var encodedFrames = frames.Select(f => new { Data = f.Encode(palette), Duration = f.Duration });
+
+            int size = palette.Data.Length + encodedFrames.Sum(f => f.Data.Length);
+            Console.WriteLine("Uploading animation of {0} frame(s) ({1} bytes)", frames.Count(), size);
+
+			WriteNewAnimation();
+            WritePalette(palette);
+			foreach (var frame in encodedFrames)
 			{
 				WriteNewFrame(frame.Duration);
-				WriteFrameData(RLE(palette.EncodeFrame(frame)));
+				WriteFrameData(frame.Data);
 			}
 			WriteStartAnimation();
 		}
 
-		private byte[] RLE(byte[] data)
-		{
-			List<byte> mem = new List<byte>();
-			byte last = 255;
-			byte count = 0;
-			foreach (var b in data)
-			{
-				if (b != last)
-				{
-					if (count > 0)
-					{
-//						Console.WriteLine("RLE {0} pixels with value {1}", count, last);
-						mem.Add(count);
-						mem.Add(last);
-					}
-					count = 0;
-				}
-				last = b;
-				count++;
-			}
-			if (count > 0)
-			{
-//				Console.WriteLine("RLE {0} pixels with value {1}", count, last);
-				mem.Add(count);
-				mem.Add(last);
-			}
-			return mem.ToArray();
-		}
 
-        private void WriteNewAnimation(byte[] palette)
+        private void WriteNewAnimation()
         {
-//			Console.WriteLine("Writing new animation, {0} bytes palette", palette.Length);
-            byte[] buffer = new byte[1 + palette.Length];
+            byte[] buffer = new byte[1];
             buffer [0] = CMD_NEW_ANIMATION;
-			Array.Copy(palette, 0, buffer, 1, palette.Length);
+            Write(buffer);
+        }
+
+        private void WritePalette(Palette palette)
+        {
+            int offset = 0;
+            while (offset < palette.Data.Length)
+            {
+                byte todo = (byte)Math.Min(30, palette.Data.Length - offset);
+                byte[] buffer = new byte[todo + 1];
+                buffer[0] = CMD_APPEND_PALETTE;
+                Array.Copy(palette.Data, offset, buffer, 1, todo);
+                offset += todo;
+                Write (buffer);
+            }
+        }
+
+        private void WriteAppendPalette(byte[] palette)
+        {
+            byte[] buffer = new byte[1 + palette.Length];
+            buffer [0] = CMD_APPEND_PALETTE;
+            Array.Copy(palette, 0, buffer, 1, palette.Length);
             Write(buffer);
         }
 
@@ -160,7 +160,6 @@ namespace ColorduinoMaster
 
         private void WriteFrameData(byte[] frame)
         {
-//			Console.WriteLine("Writing frame data {0} bytes", frame.Length);
             int offset = 0;
             while (offset < frame.Length)
             {

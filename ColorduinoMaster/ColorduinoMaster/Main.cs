@@ -21,6 +21,7 @@ namespace ColorduinoMaster
             using (var master = new Master(dev))
             {
 				var weather = new Weather(lat, lon, api);
+				var font = new Font("font.png");
 
                 while (true)
                 {
@@ -34,21 +35,19 @@ namespace ColorduinoMaster
                     }
 					else if (input.StartsWith("file "))
 					{
-						var filenames = input.Split(' ').Skip(1).Select(f => {
-							var frame = new Frame() { Duration = 1000 };
-							Console.WriteLine("Loading {0}", f);
-							frame.LoadPng(f);
-							return frame;});
-						master.Animate(filenames);
+						var filenames = input.Split(' ').Skip(1);
+						var frames = filenames.Select(f => Frame.LoadImage(f));
+						master.Animate(frames);
 					}
 					else if (input.StartsWith("gif "))
 					{
-						var font = new Font();
-						var frames = Frame.LoadGif(input.Substring(4)).ToArray();
-						foreach (var f in frames)
-						{
-							font.Render(f, "12", 0, 1, Color.Red);
-						}
+						var filename = input.Substring(4);
+						var frames = Frame.LoadGif(filename).ToArray();
+
+//						foreach (var f in frames)
+//						{
+//							font.Render(f, "12", 0, 1, Color.Red);
+//						}
 						master.Animate(frames);
 					}
                     else if (input == "weather")
@@ -64,11 +63,10 @@ namespace ColorduinoMaster
                     }
 					else if (input == "test")
 					{
-						var frame = new Frame();
+						var frame = new MutableFrame();
 						frame.SetPixel(0, 0, 255, 0, 0);
 						frame.SetPixel(0, 1, 0, 255, 0);
 						frame.SetPixel(0, 2, 0, 0, 255);
-						var font = new Font();
 						font.Render(frame, "12", 0, 0, Color.Red);
 //						frame.Pixels[0] = Color.Red;
 //						frame.Pixels[1] = Color.Green;
@@ -79,7 +77,6 @@ namespace ColorduinoMaster
 					{
 						var text = input.Substring(5);
 						var frame = new Frame();
-						var font = new Font();
 						font.Render(frame, text, 0, 0, Color.Red);
 						master.Animate(new Frame[] { frame });
 					}
@@ -87,9 +84,10 @@ namespace ColorduinoMaster
 					{
 						var colors = input.Split(' ').Skip(1).Select(i => int.Parse(i)).ToArray();
 						var color = Color.FromArgb(colors[0], colors[1], colors[2]);
-						var frame = new Frame();
-						for (int i = 0; i < 64; i++)
-							frame.Pixels[i] = color;
+						var frame = new MutableFrame();
+						for (int i = 0; i < 8; i++)
+							for (int j = 0; j < 8; j++)
+								frame.SetPixel(i, j, color);
 						master.Animate(new Frame[] { frame });
 					}
 					else if (input == "plasma")

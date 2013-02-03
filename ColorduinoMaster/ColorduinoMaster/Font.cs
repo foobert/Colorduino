@@ -7,7 +7,14 @@ namespace ColorduinoMaster
 	public class Font
 	{
 		private Dictionary<char, byte[,]> _font;
-		private char[] _lookup = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '°' };
+
+		private char[] _lookup = new char[]
+        {
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+            'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+            'U', 'V', 'W', 'X', 'Y', 'Z', '°'
+        };
 
 		public Font(string filename)
 		{
@@ -38,17 +45,17 @@ namespace ColorduinoMaster
 			return result;
 		}
 
-		public void Render(Frame frame, string text, int x, int y, Color color)
+		public Frame Render(Frame frame, string text, int x, int y, Color color)
 		{
-			var chars = text.ToCharArray ();
+			var result = new MutableFrame(frame);
+			var chars = text.ToCharArray();
 			foreach (var c in chars)
 			{
 				Console.WriteLine("Rendering {0} at {1},{2}", c, x, y);
-				var data = _font[c];
-				if (data == null)
-				{
+				byte[,] data;
+				if (!_font.TryGetValue(c, out data))
 					continue;
-				}
+
 				for (int col = data.GetLowerBound(0); col <= data.GetUpperBound(0); col++)
 				{
 					for (int row = data.GetLowerBound(1); row <= data.GetUpperBound(1); row++)
@@ -56,13 +63,13 @@ namespace ColorduinoMaster
 						byte value = data[col, row];
 						if (value != 0)
 						{
-							Console.WriteLine("Set {0},{1}", x + col, y + row);
-							frame.SetPixel(x + col, y + row, color);
+							result.SetPixel(x + col, y + row, color);
 						}
 					}
 				}
 				x += data.GetLength(0) + 1;
 			}
+			return result;
 		}
 	}
 }
