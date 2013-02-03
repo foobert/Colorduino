@@ -1,3 +1,5 @@
 apikey.txt
 ColorduinoMaster/*/bin
 ColorduinoMaster/*/obj
+*.userprefs
+.DS_Store
