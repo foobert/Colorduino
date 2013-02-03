@@ -23,6 +23,7 @@ namespace ColorduinoMaster
 			var content = client.DownloadString(_requestUri);
 			XDocument xdoc = XDocument.Parse(content);
 			var weatherCode = xdoc.XPathSelectElement("/data/current_condition/weatherCode").Value;
+			Console.WriteLine("Weather code: {0}", weatherCode);
 			CurrentWeatherCondition = TranslateWeatherCode(weatherCode);
         }
 

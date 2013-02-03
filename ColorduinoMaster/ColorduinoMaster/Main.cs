@@ -11,12 +11,16 @@ namespace ColorduinoMaster
     class MainClass
     {
         public static void Main(string[] args)
-        {
-
+		{
 			string dev = args[0];
+			string lat = args[1];
+			string lon = args[2];
+			string api = args[3];
 
             using (var master = new Master(dev))
             {
+				var weather = new Weather(lat, lon, api);
+
                 while (true)
                 {
                     Console.WriteLine("ready");
@@ -41,10 +45,16 @@ namespace ColorduinoMaster
 						var frames = Frame.LoadGif(input.Substring(4));
 						master.Animate(frames);
 					}
-                    else if (input == "test")
+                    else if (input == "weather")
                     {
-						var frames = new FileAnimation().Render("frame-a", "frame-b", "frame-c", "frame-e");
-                        master.Animate(frames);
+						weather.Refresh();
+						var condition = weather.CurrentWeatherCondition;
+						Console.WriteLine("Current weather: {0}", condition);
+						if (File.Exists(condition + ".gif"))
+						{
+						var frames = Frame.LoadGif(condition + ".gif");
+						master.Animate(frames);
+						}
                     }
 					else if (input == "plasma")
 					{
