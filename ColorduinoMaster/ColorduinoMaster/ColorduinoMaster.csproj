@@ -36,6 +36,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
@@ -46,6 +47,7 @@
     <Compile Include="Frame.cs" />
     <Compile Include="BarGraph.cs" />
     <Compile Include="FileAnimation.cs" />
+    <Compile Include="Palette.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -93,19 +93,22 @@ namespace ColorduinoMaster
 
 		public void Animate(IEnumerable<Frame> frames)
 		{
-			WriteNewAnimation ();
+			var palette = new Palette(frames);
+			WriteNewAnimation(palette.Data);
 			foreach (var frame in frames)
 			{
 				WriteNewFrame(frame.Duration);
-				WriteFrameData(frame.Data);
+				WriteFrameData(palette.EncodeFrame(frame));
 			}
 			WriteStartAnimation();
 		}
 
-        private void WriteNewAnimation()
+        private void WriteNewAnimation(byte[] palette)
         {
-            byte[] buffer = new byte[1];
+			Console.WriteLine("Writing new animation, {0} bytes palette", palette.Length);
+            byte[] buffer = new byte[1 + palette.Length];
             buffer [0] = CMD_NEW_ANIMATION;
+			Array.Copy(palette, 0, buffer, 1, palette.Length);
             Write(buffer);
         }
 
@@ -128,20 +131,22 @@ namespace ColorduinoMaster
 
         private void WriteFrameData(byte[] frame)
         {
+			Console.WriteLine("Writing frame data {0} bytes", frame.Length);
             int offset = 0;
-            if (frame.Length != 64 * 3)
+            if (frame.Length != 64)
                 throw new ArgumentOutOfRangeException("invalid frame length " + frame.Length);
 
             while (offset < frame.Length)
             {
                 byte todo = (byte)Math.Min(30, frame.Length - offset);
-                if (todo % 3 != 0)
-                    Console.WriteLine("invalid batch length");
+//                if (todo % 3 != 0)
+//                    Console.WriteLine("invalid batch length");
                 byte[] buffer = new byte[todo + 1];
                 buffer[0] = CMD_APPEND_FRAME;
                 Array.Copy(frame, offset, buffer, 1, todo);
                 offset += todo;
-                Write (buffer);
+				Console.WriteLine("Sending chunk of {0} bytes", todo);
+				Write (buffer);
             }
         }
 

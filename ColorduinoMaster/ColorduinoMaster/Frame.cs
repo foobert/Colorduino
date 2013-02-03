@@ -19,6 +19,21 @@ namespace ColorduinoMaster
 			Data = new byte[64 * 3];
 		}
 
+		public Color GetPixel(int x, int y)
+		{
+			int index = PosToIndex(x, y);
+			return Color.FromArgb(Data[index++], Data[index++], Data[index]);
+		}
+
+		public IEnumerable<Color> AllPixels()
+		{
+			int index = 0;
+			while (index < Data.Length)
+			{
+				yield return Color.FromArgb(Data[index++], Data[index++], Data[index++]);
+			}
+		}
+
 		public void SetPixel(int x, int y, int c)
 		{
 			SetPixel(x, y,

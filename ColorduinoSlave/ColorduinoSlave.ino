@@ -46,7 +46,8 @@ typedef struct
 typedef struct Frame {
   unsigned int duration;
   byte currentPixelIndex;
-  ColorRGB* pixels;
+  //ColorRGB* pixels;
+  byte* pixels;
   Frame* nextFrame;
 } Frame;
 
@@ -55,7 +56,8 @@ struct Frame* frame_new() {
   frame->duration = 0;
   frame->currentPixelIndex = 0;
   frame->nextFrame = 0;
-  frame->pixels = (ColorRGB*)malloc(sizeof(ColorRGB) * 64);
+//  frame->pixels = (ColorRGB*)malloc(sizeof(ColorRGB) * 64);
+  frame->pixels = (byte*)malloc(sizeof(byte) * 64);
   return frame;
 }
 
@@ -73,6 +75,7 @@ Frame* frameFirst = NULL;
 Frame* frameCurrent = NULL;
 Frame* frameLast = NULL;
 unsigned int frameDuration = 0;
+ColorRGB* palette = NULL;
 
 void cmd_new_animation(byte len, byte* buffer) {
   //Serial.println("cmd_new_animation");
@@ -82,6 +85,12 @@ void cmd_new_animation(byte len, byte* buffer) {
   frameFirst = NULL;
   frameLast = NULL;
   frameDuration = 0;
+  palette = (ColorRGB*)malloc(sizeof(ColorRGB) * len / 3);
+  for (int index = 0, i = 0; i < len; index++) {
+    palette[index].r = buffer[i++];
+    palette[index].g = buffer[i++];
+    palette[index].b = buffer[i++];
+  }
 }
 
 void cmd_new_frame(byte len, byte* buffer) {
@@ -115,10 +124,13 @@ void cmd_append_frame_data(byte len, byte* buffer) {
   //Serial.print("old currentPixelIndex: ");
   //Serial.println(frame->currentPixelIndex, DEC);
   
-  for (byte i = 0; i < len; frame->currentPixelIndex < 64) {
+  for (byte i = 0; i < len && frame->currentPixelIndex < 64) {
+    /*
     frame->pixels[frame->currentPixelIndex].r = buffer[i++];
     frame->pixels[frame->currentPixelIndex].g = buffer[i++];
     frame->pixels[frame->currentPixelIndex].b = buffer[i++];
+    */
+    frame->pixels[frame->currentPixelIndex] = buffer[i++];
     frame->currentPixelIndex++;
   }
   //Serial.print("new currentPixelIndex: ");
@@ -247,6 +259,12 @@ void ColorFill(unsigned char R,unsigned char G,unsigned char B)
   Colorduino.FlipPage();
 }
 
+int freeRam () {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
 void setup()
 {
   Colorduino.Init(); // initialize the board
@@ -255,6 +273,8 @@ void setup()
   serialBuffer.bufferSize = BUFFER_SIZE;
   serialBuffer.reset();
   SERIAL_PORT.begin(BAUD_RATE);
+  
+Serial.println(freeRam());
   
   // compensate for relative intensity differences in R/G/B brightness
   // array of 6-bit base values for RGB (0~63)
@@ -346,7 +366,7 @@ void loop()
       byte index = 0;
       for (byte i = 0; i < 8; i++) {
         for(byte j = 0; j < 8; j++) {
-          ColorRGB rgb = frameCurrent->pixels[index++];
+          ColorRGB rgb = palette[frameCurrent->pixels[index++]];
           Colorduino.SetPixel(i, j, rgb.r, rgb.g, rgb.b);
         }
       }
