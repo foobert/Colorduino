@@ -18,6 +18,7 @@ SerialBuffer serialBuffer;
 #define CMD_START_ANIMATION 0x04
 #define CMD_FILL 0x05
 #define CMD_PLASMA 0x06
+#define CMD_APPEND_PALETTE 0x07
 
 #define MODE_PLAY_ANIMATION 1
 #define MODE_PLASMA 2
@@ -80,6 +81,7 @@ Frame* frameCurrent = NULL;
 Frame* frameLast = NULL;
 unsigned int frameDuration = 0;
 ColorRGB* palette = NULL;
+unsigned int palette_size = 0;
 
 void cmd_new_animation(byte len, byte* buffer) {
   //Serial.println("cmd_new_animation");
@@ -92,12 +94,23 @@ void cmd_new_animation(byte len, byte* buffer) {
   
   if (palette != NULL)
     free(palette);
-  palette = (ColorRGB*)malloc(sizeof(ColorRGB) * len / 3);
-  for (int index = 0, i = 0; i < len; index++) {
+  palette_size = 0;
+//  palette = (ColorRGB*)malloc(sizeof(ColorRGB) * len / 3);
+//  for (int index = 0, i = 0; i < len; index++) {
+//    palette[index].r = buffer[i++];
+//    palette[index].g = buffer[i++];
+//    palette[index].b = buffer[i++];
+//  }
+}
+
+void cmd_append_palette(byte len, byte* buffer) {
+  palette = (ColorRGB*)realloc(palette, sizeof(ColorRGB) * (palette_size + len / 3));
+  for (int index = palette_size, i = 0; i < len; index++) {
     palette[index].r = buffer[i++];
     palette[index].g = buffer[i++];
     palette[index].b = buffer[i++];
   }
+  palette_size += len / 3;
 }
 
 void cmd_new_frame(byte len, byte* buffer) {
@@ -332,6 +345,9 @@ void loop()
         switch (c) {
         case CMD_NEW_ANIMATION:
           cmd_new_animation(bufferStatus - 4, buffer + 2);
+          break;
+        case CMD_APPEND_PALETTE:
+          cmd_append_palette(bufferStatus - 4, buffer + 2);
           break;
         case CMD_NEW_FRAME:
           cmd_new_frame(bufferStatus - 4, buffer + 2);
