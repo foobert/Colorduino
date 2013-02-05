@@ -3,6 +3,7 @@ using System.Web;
 using System.Net;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.IO;
 
 namespace ColorduinoMaster
 {
@@ -11,6 +12,7 @@ namespace ColorduinoMaster
         private readonly Uri _requestUri;
 
 		public string CurrentWeatherCondition { get; private set; }
+        public int CurrentTemperature { get; private set; }
 
         public Weather(string lat, string lon, string apiKey)
         {
@@ -25,6 +27,7 @@ namespace ColorduinoMaster
 			var weatherCode = xdoc.XPathSelectElement("/data/current_condition/weatherCode").Value;
 			Console.WriteLine("Weather code: {0}", weatherCode);
 			CurrentWeatherCondition = TranslateWeatherCode(weatherCode);
+            CurrentTemperature = int.Parse(xdoc.XPathSelectElement("/data/current_condition/temp_C").Value);
         }
 
 		private string TranslateWeatherCode(string weatherCode)

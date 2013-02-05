@@ -58,8 +58,10 @@ namespace ColorduinoMaster
 						Console.WriteLine("Current weather: {0}", condition);
 						if (File.Exists(condition + ".gif"))
 						{
-						var frames = Frame.LoadGif(condition + ".gif");
-						master.Animate(frames);
+    						var frames = Frame.LoadGif(condition + ".gif");
+                            int temp = weather.CurrentTemperature;
+                            frames = font.Overlay(frames, temp.ToString(), temp < 10 ? 5 : 1, 2, Color.Red);
+    						master.Animate(frames);
 						}
                     }
 					else if (input == "test")

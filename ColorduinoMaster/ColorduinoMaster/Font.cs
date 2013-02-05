@@ -57,7 +57,7 @@ namespace ColorduinoMaster
 			var chars = text.ToCharArray();
 			foreach (var c in chars)
 			{
-				Console.WriteLine("Rendering {0} at {1},{2}", c, x, y);
+//				Console.WriteLine("Rendering {0} at {1},{2}", c, x, y);
 				byte[,] data;
 				if (!_font.TryGetValue(c, out data))
 					continue;
