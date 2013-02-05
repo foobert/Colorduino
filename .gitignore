@@ -3,3 +3,4 @@ ColorduinoMaster/*/bin
 ColorduinoMaster/*/obj
 *.userprefs
 .DS_Store
+run.sh
