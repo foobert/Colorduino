@@ -76,8 +76,23 @@ namespace ColorduinoMaster
 			bool sent = false;
             while (_running && !sent)
             {
-                WriteEscaped(buffer);
-				sent = _readEvent.WaitOne(1000) && (_lastAck == _nextMessageId);
+                var msgId = WriteEscaped(buffer);
+                bool gotReadEvent = _readEvent.WaitOne(2000);
+                if (!gotReadEvent)
+                {
+                    Console.WriteLine("ACK timeout");
+                    sent = false;
+                }
+                else if (_lastAck != msgId)
+                {
+                    Console.WriteLine("ACK mismatch, expected {0} but got {1}", msgId, _lastAck);
+                    sent = false;
+                }
+                else
+                {
+                    sent = true;
+                }
+
 				if (!sent)
                 {
                     Console.WriteLine("Failed to send {0}", _nextMessageId);
@@ -86,11 +101,12 @@ namespace ColorduinoMaster
             }
         }
 
-        private void WriteEscaped(byte[] buffer)
+        private int WriteEscaped(byte[] buffer)
         {
 			byte msgId = (byte)(++_nextMessageId % 0xFF);
 			byte[] escaped = _escaper.Escape(msgId, buffer);
             _serial.Write(escaped, 0, escaped.Length);
+            return msgId;
         }
 
 		public void Animate(IEnumerable<Frame> frames)
