@@ -30,7 +30,6 @@ namespace ColorduinoMaster
         private AutoResetEvent _readEvent;
         private volatile int _lastAck;
 
-
         public Master(string port)
         {
 			_escaper = new StreamEscaper();
@@ -109,6 +108,11 @@ namespace ColorduinoMaster
             return msgId;
         }
 
+        public void Animate(Frame frame)
+        {
+            Animate(new Frame[] { frame });
+        }
+
 		public void Animate(IEnumerable<Frame> frames)
 		{
 			var palette = new Palette(frames);
@@ -126,7 +130,6 @@ namespace ColorduinoMaster
 			}
 			WriteStartAnimation();
 		}
-
 
         private void WriteNewAnimation()
         {

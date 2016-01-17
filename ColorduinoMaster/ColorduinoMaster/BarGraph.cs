@@ -7,20 +7,23 @@ namespace ColorduinoMaster
 {
 	public class BarGraph
 	{
-		public IEnumerable<Frame> Render(float la, float lb, float lc)
+        public IEnumerable<Frame> Render(double la, double lb, double lc)
 		{
-			var frame = new Frame();
-            Write (frame, la, lb, lc);
+            var frame = Write(new Frame(), la, lb, lc);
 			return new Frame[] { frame };
 		}
 
-        public IEnumerable<Frame> Overlay(IEnumerable<Frame> frames, float la, float lb, float lc)
+        public IEnumerable<Frame> Overlay(IEnumerable<Frame> frames, double la, double lb, double lc)
         {
             return frames.Select(f => Write(f, la, lb, lc));
         }
 
-        private Frame Write(Frame frame, float la, float lb, float lc)
+        private Frame Write(Frame frame, double la, double lb, double lc)
         {
+            la = Math.Max(0, Math.Min(1, la));
+            lb = Math.Max(0, Math.Min(1, lb));
+            lc = Math.Max(0, Math.Min(1, lc));
+
             MutableFrame result = new MutableFrame(frame);
             byte r, g, b;
 
